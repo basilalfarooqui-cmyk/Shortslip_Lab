@@ -29,7 +29,7 @@ def api_fetch_reels():
 @app.route("/api/schedule", methods=["POST"])
 def api_schedule():
     data = request.json
-    mode = data.get("mode") # 'mode_1_clipping' or 'mode_2_reels'
+    mode = data.get("mode") # 'mode_1_clipping' or 'mode_2_reels.'
     custom_time = data.get("custom_time")
     upload_now = data.get("upload_now", False)
     
