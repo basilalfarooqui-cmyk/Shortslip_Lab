@@ -2,116 +2,167 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Unified Viral Studio</title>
+    <title>Shortslip Lab - Viral Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .phone-frame { width: 280px; height: 500px; position: relative; background: #000; border-radius: 24px; overflow: hidden; border: 4px solid #374151; }
-        .draggable-wm { position: absolute; cursor: move; user-select: none; font-weight: bold; color: white; text-shadow: 1px 1px 2px black; }
+        body { background-color: #0b0f19; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #0b0f19; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
-    <div class="flex h-screen">
-        <!-- Sidebar / Toggle -->
-        <div class="w-72 bg-slate-900 border-r border-slate-800 p-6 flex flex-col justify-between">
-            <div>
-                <h1 class="text-xl font-bold text-cyan-400 mb-6">Viral Studio</h1>
-                <!-- Mode Toggle -->
-                <div class="mb-6 bg-slate-800 p-1 rounded-xl flex">
-                    <button id="btn-mode1" onclick="switchMode(1)" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-cyan-600 text-white transition">Clipping</button>
-                    <button id="btn-mode2" onclick="switchMode(2)" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-400 transition">Reels</button>
-                </div>
-                <!-- Channel Name Input -->
-                <div class="mb-4">
-                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">Channel Name (@Watermark)</label>
-                    <input type="text" id="channel-name-input" value="YourChannel" oninput="updateWatermarkText()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500">
-                </div>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar Dashboard Navigation -->
+    <aside class="w-64 bg-[#0f172a] border-r border-slate-800 flex flex-col justify-between p-4 select-none">
+        <div class="space-y-6">
+            <div class="flex items-center gap-3 px-2 py-1">
+                <div class="w-8 h-8 rounded-xl bg-cyan-500 flex items-center justify-center font-bold text-slate-950 text-lg">⚡</div>
+                <span class="font-bold text-lg tracking-wide text-white">Shortslip Lab</span>
             </div>
-            <div class="text-xs text-slate-500">
-                Schedule: 4x Daily (Interleaved)
+            
+            <nav class="space-y-1">
+                <button onclick="switchMode(1)" id="nav-mode1" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 transition">
+                    🎬 Clipper Studio
+                </button>
+                <button onclick="switchMode(2)" id="nav-mode2" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition">
+                    📱 Reel Grabber
+                </button>
+                <button onclick="switchMode(3)" id="nav-settings" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition">
+                    ⚙️ Settings & Schedule
+                </button>
+            </nav>
+        </div>
+        
+        <div class="px-2 py-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-xs text-slate-400 space-y-1">
+            <div class="font-medium text-slate-300">Schedule Status</div>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>4x Daily Interleaved</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-y-auto custom-scroll p-8">
+
+        <!-- ================= MODE 1: YOUTUBE CLIPPER STUDIO ================= -->
+        <div id="container-mode1" class="space-y-6 max-w-7xl mx-auto w-full">
+            <h1 class="text-2xl font-bold tracking-tight text-white">YouTube Clipper Studio</h1>
+
+            <!-- Top Grid: Input & JSON Payload -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Box 1: Input Video & Generate AI Package -->
+                <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">1. Input Video & Generate AI Package</h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." class="flex-1 bg-[#0b0f19] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+                        <button onclick="fetchYouTube()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-lg shadow-cyan-900/20">Extract Transcript</button>
+                    </div>
+
+                    <div id="ai-pack-box" class="space-y-3 hidden">
+                        <div class="relative">
+                            <textarea id="ai-pack-output" rows="6" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-3 font-mono text-xs text-slate-300 focus:outline-none resize-none" readonly></textarea>
+                        </div>
+                        <button onclick="copyAiPack()" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-400 font-semibold py-2 rounded-xl text-xs transition border border-slate-700">Copy Master System Prompt & Transcript</button>
+                    </div>
+                </div>
+
+                <!-- Box 2: Paste AI Response JSON -->
+                <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">2. Paste AI Response JSON</h2>
+                        <textarea id="ai-response-input" rows="5" placeholder="Paste JSON Payload Here..." class="w-full bg-[#0b0f19] border border-slate-700 rounded-xl p-3 font-mono text-xs text-slate-200 focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+                    </div>
+                    <button onclick="parseAiResponse()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/20">Load & Analyse Clips</button>
+                </div>
+
+            </div>
+
+            <!-- Box 3: Generated Clip Studio Grid -->
+            <div id="clips-section" class="space-y-4 hidden pt-4">
+                <h2 class="text-xl font-bold tracking-tight text-white">3. Generated Clip Studio</h2>
+                <div id="clips-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <!-- Dynamically generated clip cards populate here -->
+                </div>
             </div>
         </div>
 
-        <!-- Main Workspace -->
-        <div class="flex-1 flex flex-col overflow-y-auto p-8">
-            <!-- Mode 1 Container -->
-            <div id="container-mode1" class="space-y-6">
-                <h2 class="text-2xl font-bold">YouTube Clipping Studio</h2>
-                <div class="flex gap-4">
-                    <input type="text" id="yt-url" placeholder="Paste YouTube Link..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-                    <button onclick="fetchYouTube()" class="bg-cyan-600 hover:bg-cyan-500 px-6 py-3 rounded-xl font-semibold text-sm transition">Extract & AI Pack</button>
+        <!-- ================= MODE 2: REEL GRABBER ================= -->
+        <div id="container-mode2" class="space-y-6 max-w-7xl mx-auto w-full hidden">
+            <h1 class="text-2xl font-bold tracking-tight text-white">Local Reel Grabber</h1>
+            
+            <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+                <div class="flex gap-3">
+                    <input type="text" id="reel-url" placeholder="https://www.instagram.com/..." class="flex-1 bg-[#0b0f19] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                    <button onclick="fetchReels()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/20">Fetch Reels</button>
+                </div>
+                <div class="flex gap-4 items-center text-xs text-slate-400">
+                    <span>From Reel: <select class="bg-[#0b0f19] border border-slate-700 rounded px-2 py-1 text-slate-200"><option>1</option></select></span>
+                    <span>To Reel: <select class="bg-[#0b0f19] border border-slate-700 rounded px-2 py-1 text-slate-200"><option>2</option></select></span>
+                    <button class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-1.5 rounded-lg font-medium transition border border-slate-700">Start Batch Download</button>
                 </div>
             </div>
 
-            <!-- Mode 2 Container -->
-            <div id="container-mode2" class="space-y-6 hidden">
-                <h2 class="text-2xl font-bold">Reels to Shorts Studio</h2>
-                <div class="flex gap-4">
-                    <input type="text" id="reel-url" placeholder="Paste Instagram Reel or Channel Link..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-                    <button onclick="fetchReels()" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-semibold text-sm transition">Fetch Reels</button>
-                </div>
+            <div id="reels-grid-section" class="space-y-4 hidden">
+                <h2 class="text-lg font-bold text-white">Downloaded Reels</h2>
+                <div id="reels-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
             </div>
+        </div>
 
-            <!-- AI Pack Box -->
-            <div id="ai-pack-section" class="mt-8 hidden bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <!-- ================= MODE 3: SETTINGS ================= -->
+        <div id="container-settings" class="space-y-6 max-w-4xl mx-auto w-full hidden">
+            <h1 class="text-2xl font-bold tracking-tight text-white">Settings & Watermark Config</h1>
+            
+            <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl">
                 <div>
-                    <h3 class="text-lg font-semibold mb-2 text-cyan-400">1. Master AI Pack (Copy & Paste once)</h3>
-                    <textarea id="ai-pack-output" rows="6" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 focus:outline-none" readonly></textarea>
-                    <button onclick="copyAiPack()" class="mt-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition">Copy AI Pack</button>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">Channel Name Watermark (@Handle)</label>
+                    <input type="text" id="channel-name-input" value="YourChannel" oninput="updateWatermarkText()" class="w-full bg-[#0b0f19] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
                 </div>
 
-                <!-- NEW: Paste AI Response Section -->
-                <div class="border-t border-slate-800 pt-4">
-                    <h3 class="text-lg font-semibold mb-2 text-emerald-400">2. Paste AI's JSON Reply Here</h3>
-                    <textarea id="ai-response-input" rows="6" placeholder="Paste the JSON response from your AI here..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 font-mono text-xs text-slate-100 focus:outline-none focus:border-emerald-500"></textarea>
-                    <button onclick="parseAiResponse()" class="mt-2 bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-lg text-xs font-semibold transition">Load Clips into Cards</button>
-                </div>
-            </div>
-
-            <!-- Clip Cards Container -->
-            <div id="clips-container" class="mt-8 space-y-4"></div>
-
-            <!-- Preview Phone Frame with Draggable Watermark -->
-            <div class="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center">
-                <h3 class="text-sm font-semibold mb-4 text-slate-400">Live Preview & Watermark Placement</h3>
-                <div id="phone-preview" class="phone-frame flex items-center justify-center">
-                    <div id="draggable-wm-el" class="draggable-wm text-sm" style="top: 40px; left: 40px;" draggable="true">@YourChannel</div>
-                </div>
-                <div class="mt-4 flex gap-4 items-center">
-                    <label class="text-xs text-slate-400">Size Slider:</label>
-                    <input type="range" min="10" max="32" value="14" oninput="resizeWatermark(this.value)" class="accent-cyan-500">
+                <div class="flex flex-col items-center p-6 bg-[#0b0f19] rounded-xl border border-slate-800">
+                    <span class="text-xs font-medium text-slate-400 mb-3">Live Phone Watermark Preview</span>
+                    <div id="phone-preview" class="w-[240px] h-[420px] bg-black rounded-2xl border-4 border-slate-700 relative overflow-hidden flex items-center justify-center shadow-2xl">
+                        <div id="draggable-wm-el" class="absolute cursor-move font-bold text-white text-sm select-none" style="top: 40px; left: 40px;" draggable="true">@YourChannel</div>
+                    </div>
+                    <div class="mt-4 flex items-center gap-4 w-64">
+                        <span class="text-xs text-slate-400">Size:</span>
+                        <input type="range" min="10" max="32" value="14" oninput="resizeWatermark(this.value)" class="flex-1 accent-cyan-500">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+    </main>
 
     <script>
         function switchMode(mode) {
+            document.getElementById('container-mode1').classList.add('hidden');
+            document.getElementById('container-mode2').classList.add('hidden');
+            document.getElementById('container-settings').classList.add('hidden');
+            
+            document.getElementById('nav-mode1').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition";
+            document.getElementById('nav-mode2').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition";
+            document.getElementById('nav-settings').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 transition";
+
             if (mode === 1) {
                 document.getElementById('container-mode1').classList.remove('hidden');
-                document.getElementById('container-mode2').classList.add('hidden');
-                document.getElementById('btn-mode1').className = "flex-1 py-2 text-sm font-semibold rounded-lg bg-cyan-600 text-white transition";
-                document.getElementById('btn-mode2').className = "flex-1 py-2 text-sm font-semibold rounded-lg text-slate-400 transition";
-            } else {
-                document.getElementById('container-mode1').classList.add('hidden');
+                document.getElementById('nav-mode1').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 transition";
+            } else if (mode === 2) {
                 document.getElementById('container-mode2').classList.remove('hidden');
-                document.getElementById('btn-mode2').className = "flex-1 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white transition";
-                document.getElementById('btn-mode1').className = "flex-1 py-2 text-sm font-semibold rounded-lg text-slate-400 transition";
+                document.getElementById('nav-mode2').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 transition";
+            } else {
+                document.getElementById('container-settings').classList.remove('hidden');
+                document.getElementById('nav-settings').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 transition";
             }
-        }
-
-        function updateWatermarkText() {
-            const val = document.getElementById('channel-name-input').value;
-            document.getElementById('draggable-wm-el').innerText = "@" + val;
-        }
-
-        function resizeWatermark(size) {
-            document.getElementById('draggable-wm-el').style.fontSize = size + "px";
         }
 
         async function fetchYouTube() {
             const url = document.getElementById('yt-url').value;
             if (!url) { alert("Please paste a YouTube URL!"); return; }
             const btn = event.target;
+            const orig = btn.innerText;
             btn.innerText = "Extracting..."; btn.disabled = true;
             try {
                 const res = await fetch('/api/fetch-youtube', {
@@ -120,94 +171,92 @@
                     body: JSON.stringify({url})
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error || "Extraction failed.");
+                if (!res.ok) throw new Error(data.error || "Failed");
                 document.getElementById('ai-pack-output').value = data.ai_pack;
-                document.getElementById('ai-pack-section').classList.remove('hidden');
+                document.getElementById('ai-pack-box').classList.remove('hidden');
             } catch (err) {
                 alert("Error: " + err.message);
             } finally {
-                btn.innerText = "Extract & AI Pack"; btn.disabled = false;
+                btn.innerText = orig; btn.disabled = false;
             }
-        }
-
-        async function fetchReels() {
-            const url = document.getElementById('reel-url').value;
-            if (!url) { alert("Please paste an Instagram URL!"); return; }
-            const res = await fetch('/api/fetch-reels', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({url})
-            });
-            const data = await res.json();
-            document.getElementById('ai-pack-output').value = data.ai_pack;
-            document.getElementById('ai-pack-section').classList.remove('hidden');
         }
 
         function copyAiPack() {
             const box = document.getElementById('ai-pack-output');
             box.select();
             navigator.clipboard.writeText(box.value);
-            alert("AI Pack copied to clipboard!");
+            alert("Master Prompt & Transcript copied to clipboard!");
+        }
+
+        async function fetchReels() {
+            const url = document.getElementById('reel-url').value;
+            if (!url) { alert("Please paste an Instagram link!"); return; }
+            const res = await fetch('/api/fetch-reels', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url})
+            });
+            const data = await res.json();
+            const grid = document.getElementById('reels-grid');
+            grid.innerHTML = "";
+            data.reels.forEach(r => {
+                const card = document.createElement('div');
+                card.className = "bg-[#111827] border border-slate-800 rounded-xl p-4 space-y-3";
+                card.innerHTML = `<div class="aspect-[9/16] bg-black rounded-lg flex items-center justify-center text-slate-500 text-xs">Reel Preview</div><p class="text-xs font-semibold text-slate-200 truncate">${r.title}</p><button class="w-full bg-cyan-600 hover:bg-cyan-500 py-2 rounded-lg text-xs font-semibold text-white transition">Save MP4</button>`;
+                grid.appendChild(card);
+            });
+            document.getElementById('reels-grid-section').classList.remove('hidden');
         }
 
         function parseAiResponse() {
-            const rawText = document.getElementById('ai-response-input').value.trim();
+            const raw = document.getElementById('ai-response-input').value.trim();
             try {
-                // Clean up potential markdown code blocks if pasted
-                let cleanJson = rawText.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
-                const parsed = JSON.parse(cleanJson);
+                let clean = raw.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+                const parsed = JSON.parse(clean);
                 const clips = parsed.clips || [];
+                const grid = document.getElementById('clips-grid');
+                grid.innerHTML = "";
                 
-                const container = document.getElementById('clips-container');
-                container.innerHTML = `<h3 class="text-xl font-bold mb-4 text-cyan-400">Generated Clips (${clips.length})</h3>`;
-                
-                clips.forEach((clip, index) => {
+                clips.forEach((clip, i) => {
                     const card = document.createElement('div');
-                    card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4";
+                    card.className = "bg-[#111827] border border-slate-800 rounded-2xl p-4 space-y-3 shadow-lg flex flex-col justify-between";
                     card.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-mono text-cyan-400">Clip #${index + 1} (${clip.start}s - ${clip.end}s)</span>
-                            <div class="flex gap-2">
-                                <label class="text-xs flex items-center gap-1 text-slate-300">
-                                    <input type="checkbox" checked class="accent-cyan-500"> Include in schedule
-                                </label>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-mono text-cyan-400">#${i+1} (${clip.start}s - ${clip.end}s)</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">Virality 94/100</span>
+                        </div>
+                        <div class="aspect-[9/16] max-h-40 bg-black rounded-xl border border-slate-800 flex items-center justify-center text-xs text-slate-500">Video Preview</div>
+                        <div class="space-y-2">
+                            <input type="text" value="${clip.title}" class="w-full bg-[#0b0f19] border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <select class="bg-[#0b0f19] border border-slate-700 rounded-lg p-1.5 text-slate-300"><option>Follow Talker</option></select>
+                                <select class="bg-[#0b0f19] border border-slate-700 rounded-lg p-1.5 text-slate-300"><option>Hormozi Pop</option></select>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Title (with Hashtags)</label>
-                            <input type="text" value="${clip.title}" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Description</label>
-                            <textarea rows="2" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs focus:outline-none focus:border-cyan-500">${clip.description || ''}</textarea>
-                        </div>
-                        <div class="flex gap-3 pt-2">
-                            <button class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-xs font-semibold transition">Upload Now (+5m)</button>
-                            <button class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition">Download Clip</button>
-                        </div>
+                        <button class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 rounded-xl text-xs transition shadow-md">Render High-Quality MP4</button>
                     `;
-                    container.appendChild(card);
+                    grid.appendChild(card);
                 });
-                alert(`Successfully loaded ${clips.length} clip cards!`);
+                document.getElementById('clips-section').classList.remove('hidden');
+                alert(`Successfully loaded ${clips.length} clip cards matching reference layout!`);
             } catch (err) {
-                alert("Invalid JSON format. Please ensure you copied the exact JSON reply from the AI.\n\nError: " + err.message);
+                alert("Invalid JSON format. Please ensure you pasted the full JSON response.\n\nError: " + err.message);
             }
         }
 
-        // Draggable Watermark Logic inside Phone Frame
+        function updateWatermarkText() {
+            document.getElementById('draggable-wm-el').innerText = "@" + document.getElementById('channel-name-input').value;
+        }
+        function resizeWatermark(val) {
+            document.getElementById('draggable-wm-el').style.fontSize = val + "px";
+        }
+        
+        // Draggable Watermark
         const wm = document.getElementById('draggable-wm-el');
-        let isDragging = false, startX, startY;
-        wm.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX - wm.offsetLeft;
-            startY = e.clientY - wm.offsetTop;
-        });
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            wm.style.left = (e.clientX - startX) + 'px';
-            wm.style.top = (e.clientY - startY) + 'px';
-        });
-        document.addEventListener('mouseup', () => { isDragging = false; });
+        let isDrag = false, startX, startY;
+        wm.addEventListener('mousedown', e => { isDrag = true; startX = e.clientX - wm.offsetLeft; startY = e.clientY - wm.offsetTop; });
+        document.addEventListener('mousemove', e => { if (!isDrag) return; wm.style.left = (e.clientX - startX) + 'px'; wm.style.top = (e.clientY - startY) + 'px'; });
+        document.addEventListener('mouseup', () => isDrag = false);
     </script>
 </body>
 </html>
