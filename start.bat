@@ -1,7 +1,7 @@
 @echo off
 TITLE Unified Viral Studio
-echo [INFO] Starting Unified Viral Studio...
-python -m pip install -r requirements.txt --quiet
+echo [INFO] Updating yt-dlp and dependencies...
+python -m pip install --upgrade -r requirements.txt --no-warn-script-location
 echo [INFO] Launching Flask server...
 start python app.py
 timeout /t 2 >nul
