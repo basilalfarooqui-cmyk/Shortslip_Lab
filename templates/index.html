@@ -52,11 +52,23 @@
             </div>
 
             <!-- AI Pack Box -->
-            <div id="ai-pack-section" class="mt-8 hidden bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                <h3 class="text-lg font-semibold mb-3 text-cyan-400">Master AI Pack (Copy & Paste once)</h3>
-                <textarea id="ai-pack-output" rows="6" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 focus:outline-none" readonly></textarea>
-                <button onclick="copyAiPack()" class="mt-3 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition">Copy AI Pack</button>
+            <div id="ai-pack-section" class="mt-8 hidden bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2 text-cyan-400">1. Master AI Pack (Copy & Paste once)</h3>
+                    <textarea id="ai-pack-output" rows="6" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 focus:outline-none" readonly></textarea>
+                    <button onclick="copyAiPack()" class="mt-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition">Copy AI Pack</button>
+                </div>
+
+                <!-- NEW: Paste AI Response Section -->
+                <div class="border-t border-slate-800 pt-4">
+                    <h3 class="text-lg font-semibold mb-2 text-emerald-400">2. Paste AI's JSON Reply Here</h3>
+                    <textarea id="ai-response-input" rows="6" placeholder="Paste the JSON response from your AI here..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 font-mono text-xs text-slate-100 focus:outline-none focus:border-emerald-500"></textarea>
+                    <button onclick="parseAiResponse()" class="mt-2 bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-lg text-xs font-semibold transition">Load Clips into Cards</button>
+                </div>
             </div>
+
+            <!-- Clip Cards Container -->
+            <div id="clips-container" class="mt-8 space-y-4"></div>
 
             <!-- Preview Phone Frame with Draggable Watermark -->
             <div class="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center">
@@ -98,18 +110,29 @@
 
         async function fetchYouTube() {
             const url = document.getElementById('yt-url').value;
-            const res = await fetch('/api/fetch-youtube', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({url})
-            });
-            const data = await res.json();
-            document.getElementById('ai-pack-output').value = data.ai_pack;
-            document.getElementById('ai-pack-section').classList.remove('hidden');
+            if (!url) { alert("Please paste a YouTube URL!"); return; }
+            const btn = event.target;
+            btn.innerText = "Extracting..."; btn.disabled = true;
+            try {
+                const res = await fetch('/api/fetch-youtube', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url})
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Extraction failed.");
+                document.getElementById('ai-pack-output').value = data.ai_pack;
+                document.getElementById('ai-pack-section').classList.remove('hidden');
+            } catch (err) {
+                alert("Error: " + err.message);
+            } finally {
+                btn.innerText = "Extract & AI Pack"; btn.disabled = false;
+            }
         }
 
         async function fetchReels() {
             const url = document.getElementById('reel-url').value;
+            if (!url) { alert("Please paste an Instagram URL!"); return; }
             const res = await fetch('/api/fetch-reels', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -127,29 +150,64 @@
             alert("AI Pack copied to clipboard!");
         }
 
+        function parseAiResponse() {
+            const rawText = document.getElementById('ai-response-input').value.trim();
+            try {
+                // Clean up potential markdown code blocks if pasted
+                let cleanJson = rawText.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+                const parsed = JSON.parse(cleanJson);
+                const clips = parsed.clips || [];
+                
+                const container = document.getElementById('clips-container');
+                container.innerHTML = `<h3 class="text-xl font-bold mb-4 text-cyan-400">Generated Clips (${clips.length})</h3>`;
+                
+                clips.forEach((clip, index) => {
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-mono text-cyan-400">Clip #${index + 1} (${clip.start}s - ${clip.end}s)</span>
+                            <div class="flex gap-2">
+                                <label class="text-xs flex items-center gap-1 text-slate-300">
+                                    <input type="checkbox" checked class="accent-cyan-500"> Include in schedule
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Title (with Hashtags)</label>
+                            <input type="text" value="${clip.title}" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Description</label>
+                            <textarea rows="2" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs focus:outline-none focus:border-cyan-500">${clip.description || ''}</textarea>
+                        </div>
+                        <div class="flex gap-3 pt-2">
+                            <button class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-xs font-semibold transition">Upload Now (+5m)</button>
+                            <button class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition">Download Clip</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                alert(`Successfully loaded ${clips.length} clip cards!`);
+            } catch (err) {
+                alert("Invalid JSON format. Please ensure you copied the exact JSON reply from the AI.\n\nError: " + err.message);
+            }
+        }
+
         // Draggable Watermark Logic inside Phone Frame
         const wm = document.getElementById('draggable-wm-el');
-        const phone = document.getElementById('phone-preview');
-        let isDragging = false;
-        let startX, startY;
-
+        let isDragging = false, startX, startY;
         wm.addEventListener('mousedown', (e) => {
             isDragging = true;
             startX = e.clientX - wm.offsetLeft;
             startY = e.clientY - wm.offsetTop;
         });
-
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            let x = e.clientX - startX;
-            let y = e.clientY - startY;
-            wm.style.left = x + 'px';
-            wm.style.top = y + 'px';
+            wm.style.left = (e.clientX - startX) + 'px';
+            wm.style.top = (e.clientY - startY) + 'px';
         });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
+        document.addEventListener('mouseup', () => { isDragging = false; });
     </script>
 </body>
 </html>
