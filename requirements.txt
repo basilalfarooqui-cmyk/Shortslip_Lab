@@ -1,6 +1,7 @@
-flask==3.0.2
-yt-dlp==2024.3.10
-google-api-python-client==2.120.0
-google-auth-oauthlib==1.2.0
-google-auth-httplib2==0.2.0
-requests==2.31.0
+flask
+yt-dlp
+youtube-transcript-api
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+requests
