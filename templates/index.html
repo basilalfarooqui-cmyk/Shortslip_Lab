@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Unified Viral Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .phone-frame { width: 280px; height: 500px; position: relative; background: #000; border-radius: 24px; overflow: hidden; border: 4px solid #374151; }
+        .draggable-wm { position: absolute; cursor: move; user-select: none; font-weight: bold; color: white; text-shadow: 1px 1px 2px black; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+    <div class="flex h-screen">
+        <!-- Sidebar / Toggle -->
+        <div class="w-72 bg-slate-900 border-r border-slate-800 p-6 flex flex-col justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-cyan-400 mb-6">Viral Studio</h1>
+                <!-- Mode Toggle -->
+                <div class="mb-6 bg-slate-800 p-1 rounded-xl flex">
+                    <button id="btn-mode1" onclick="switchMode(1)" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-cyan-600 text-white transition">Clipping</button>
+                    <button id="btn-mode2" onclick="switchMode(2)" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-400 transition">Reels</button>
+                </div>
+                <!-- Channel Name Input -->
+                <div class="mb-4">
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">Channel Name (@Watermark)</label>
+                    <input type="text" id="channel-name-input" value="YourChannel" oninput="updateWatermarkText()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500">
+                </div>
+            </div>
+            <div class="text-xs text-slate-500">
+                Schedule: 4x Daily (Interleaved)
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="flex-1 flex flex-col overflow-y-auto p-8">
+            <!-- Mode 1 Container -->
+            <div id="container-mode1" class="space-y-6">
+                <h2 class="text-2xl font-bold">YouTube Clipping Studio</h2>
+                <div class="flex gap-4">
+                    <input type="text" id="yt-url" placeholder="Paste YouTube Link..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+                    <button onclick="fetchYouTube()" class="bg-cyan-600 hover:bg-cyan-500 px-6 py-3 rounded-xl font-semibold text-sm transition">Extract & AI Pack</button>
+                </div>
+            </div>
+
+            <!-- Mode 2 Container -->
+            <div id="container-mode2" class="space-y-6 hidden">
+                <h2 class="text-2xl font-bold">Reels to Shorts Studio</h2>
+                <div class="flex gap-4">
+                    <input type="text" id="reel-url" placeholder="Paste Instagram Reel or Channel Link..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+                    <button onclick="fetchReels()" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-semibold text-sm transition">Fetch Reels</button>
+                </div>
+            </div>
+
+            <!-- AI Pack Box -->
+            <div id="ai-pack-section" class="mt-8 hidden bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h3 class="text-lg font-semibold mb-3 text-cyan-400">Master AI Pack (Copy & Paste once)</h3>
+                <textarea id="ai-pack-output" rows="6" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 focus:outline-none" readonly></textarea>
+                <button onclick="copyAiPack()" class="mt-3 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition">Copy AI Pack</button>
+            </div>
+
+            <!-- Preview Phone Frame with Draggable Watermark -->
+            <div class="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center">
+                <h3 class="text-sm font-semibold mb-4 text-slate-400">Live Preview & Watermark Placement</h3>
+                <div id="phone-preview" class="phone-frame flex items-center justify-center">
+                    <div id="draggable-wm-el" class="draggable-wm text-sm" style="top: 40px; left: 40px;" draggable="true">@YourChannel</div>
+                </div>
+                <div class="mt-4 flex gap-4 items-center">
+                    <label class="text-xs text-slate-400">Size Slider:</label>
+                    <input type="range" min="10" max="32" value="14" oninput="resizeWatermark(this.value)" class="accent-cyan-500">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchMode(mode) {
+            if (mode === 1) {
+                document.getElementById('container-mode1').classList.remove('hidden');
+                document.getElementById('container-mode2').classList.add('hidden');
+                document.getElementById('btn-mode1').className = "flex-1 py-2 text-sm font-semibold rounded-lg bg-cyan-600 text-white transition";
+                document.getElementById('btn-mode2').className = "flex-1 py-2 text-sm font-semibold rounded-lg text-slate-400 transition";
+            } else {
+                document.getElementById('container-mode1').classList.add('hidden');
+                document.getElementById('container-mode2').classList.remove('hidden');
+                document.getElementById('btn-mode2').className = "flex-1 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white transition";
+                document.getElementById('btn-mode1').className = "flex-1 py-2 text-sm font-semibold rounded-lg text-slate-400 transition";
+            }
+        }
+
+        function updateWatermarkText() {
+            const val = document.getElementById('channel-name-input').value;
+            document.getElementById('draggable-wm-el').innerText = "@" + val;
+        }
+
+        function resizeWatermark(size) {
+            document.getElementById('draggable-wm-el').style.fontSize = size + "px";
+        }
+
+        async function fetchYouTube() {
+            const url = document.getElementById('yt-url').value;
+            const res = await fetch('/api/fetch-youtube', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url})
+            });
+            const data = await res.json();
+            document.getElementById('ai-pack-output').value = data.ai_pack;
+            document.getElementById('ai-pack-section').classList.remove('hidden');
+        }
+
+        async function fetchReels() {
+            const url = document.getElementById('reel-url').value;
+            const res = await fetch('/api/fetch-reels', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url})
+            });
+            const data = await res.json();
+            document.getElementById('ai-pack-output').value = data.ai_pack;
+            document.getElementById('ai-pack-section').classList.remove('hidden');
+        }
+
+        function copyAiPack() {
+            const box = document.getElementById('ai-pack-output');
+            box.select();
+            navigator.clipboard.writeText(box.value);
+            alert("AI Pack copied to clipboard!");
+        }
+
+        // Draggable Watermark Logic inside Phone Frame
+        const wm = document.getElementById('draggable-wm-el');
+        const phone = document.getElementById('phone-preview');
+        let isDragging = false;
+        let startX, startY;
+
+        wm.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - wm.offsetLeft;
+            startY = e.clientY - wm.offsetTop;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            let x = e.clientX - startX;
+            let y = e.clientY - startY;
+            wm.style.left = x + 'px';
+            wm.style.top = y + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+    </script>
+</body>
+</html>
